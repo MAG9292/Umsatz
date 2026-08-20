@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umsätze Deluxe Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- jsPDF & AutoTable CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl shadow-lg shadow-indigo-500/20">
+                    <i data-lucide="gem" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        Umsätze Deluxe
+                        <span class="text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full">Pro Dashboard</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Interaktive Finanzanalyse & Transaction Manager</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="openEditModal()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-600/20 active:scale-95">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Neuer Umsatz</span>
+                </button>
+                <button onclick="exportAllToPDF()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95">
+                    <i data-lucide="file-text" class="w-4 h-4 text-rose-400"></i>
+                    <span>Gesamt-PDF</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Top KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Gesamt EUR -->
+            <div class="bg-slate-800/60 border border-slate-700/50 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-indigo-500/50 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Gesamtumsatz (€)</p>
+                        <h3 id="statEur" class="text-2xl font-extrabold text-white mt-2">0,00 €</h3>
+                    </div>
+                    <div class="p-3 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-xl">
+                        <i data-lucide="euro" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center text-xs text-slate-400 gap-1">
+                    <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <span>20 Transaktionen erfasst</span>
+                </div>
+            </div>
+
+            <!-- Gesamt TRY -->
+            <div class="bg-slate-800/60 border border-slate-700/50 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-emerald-500/50 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Gesamtumsatz (TRY)</p>
+                        <h3 id="statTry" class="text-2xl font-extrabold text-emerald-400 mt-2">₺ 0,00</h3>
+                    </div>
+                    <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl">
+                        <i data-lucide="banknote" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center text-xs text-slate-400 gap-1">
+                    <span>In Türkischen Lira</span>
+                </div>
+            </div>
+
+            <!-- Ø Wechselkurs -->
+            <div class="bg-slate-800/60 border border-slate-700/50 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-amber-500/50 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ø Wechselkurs</p>
+                        <h3 id="statRate" class="text-2xl font-extrabold text-amber-400 mt-2">0.00 TRY</h3>
+                    </div>
+                    <div class="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
+                        <i data-lucide="arrow-right-left" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center text-xs text-slate-400 gap-1">
+                    <span>Durchschnitt TRY per 1 €</span>
+                </div>
+            </div>
+
+            <!-- Mindestlohn Vergleich -->
+            <div class="bg-slate-800/60 border border-slate-700/50 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-violet-500/50 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Faktor Mindestlohn</p>
+                        <h3 id="statMinWage" class="text-2xl font-extrabold text-violet-400 mt-2">2.34x</h3>
+                    </div>
+                    <div class="p-3 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-xl">
+                        <i data-lucide="scale" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center text-xs text-slate-400 gap-1">
+                    <span>Mindestlohn TR = 28.075 ₺</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zahlplan & Filter Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Zahlplan Summary Cards -->
+            <div class="bg-slate-800/40 border border-slate-700/50 p-5 rounded-2xl flex flex-col justify-between space-y-4">
+                <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400"></i>
+                    Zahlplan Übersicht
+                </h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-700/40">
+                        <div class="text-xs text-slate-400 font-medium">Zahlplan Ja</div>
+                        <div id="planYesSum" class="text-lg font-bold text-indigo-400 mt-1">0,00 €</div>
+                        <div id="planYesCount" class="text-xs text-slate-500">0 Buchungen</div>
+                    </div>
+                    <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-700/40">
+                        <div class="text-xs text-slate-400 font-medium">Zahlplan Nein</div>
+                        <div id="planNoSum" class="text-lg font-bold text-slate-300 mt-1">0,00 €</div>
+                        <div id="planNoCount" class="text-xs text-slate-500">0 Buchungen</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search & Filters -->
+            <div class="lg:col-span-2 bg-slate-800/40 border border-slate-700/50 p-5 rounded-2xl flex flex-col justify-between space-y-4">
+                <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="filter" class="w-4 h-4 text-indigo-400"></i>
+                    Filter & Suche
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="relative sm:col-span-1">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Händler suchen..." class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <select id="planFilter" onchange="applyFilters()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="ALL">Zahlplan: Alle</option>
+                            <option value="Ja">Nur mit Zahlplan (Ja)</option>
+                            <option value="Nein">Ohne Zahlplan (Nein)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="sortBy" onchange="applyFilters()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="date-desc">Datum (Neueste zuerst)</option>
+                            <option value="date-asc">Datum (Älteste zuerst)</option>
+                            <option value="amount-desc">Betrag EUR (Höchste zuerst)</option>
+                            <option value="amount-asc">Betrag EUR (Niedrigste zuerst)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl shadow-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700/60 flex justify-between items-center">
+                <h3 class="font-bold text-slate-200 text-base flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-5 h-5 text-indigo-400"></i>
+                    Umsätze & Transaktionen
+                </h3>
+                <span id="recordCount" class="text-xs bg-slate-700/60 text-slate-300 font-semibold px-2.5 py-1 rounded-full border border-slate-600">20 Einträge</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-900/40 text-slate-400 border-b border-slate-700/60 font-semibold text-xs uppercase tracking-wider">
+                            <th class="py-3.5 px-6">Händler</th>
+                            <th class="py-3.5 px-4">Datum</th>
+                            <th class="py-3.5 px-4">Betrag (€)</th>
+                            <th class="py-3.5 px-4">Betrag (TRY)</th>
+                            <th class="py-3.5 px-4">Wechselkurs</th>
+                            <th class="py-3.5 px-4">Zahlplan</th>
+                            <th class="py-3.5 px-6 text-right">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-700/40 text-slate-300">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="emptyState" class="hidden text-center py-12">
+                <i data-lucide="inbox" class="w-12 h-12 mx-auto text-slate-600 mb-2"></i>
+                <p class="text-slate-400 font-medium">Keine passenden Umsätze gefunden.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+        <i id="toastIcon" data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+        <span id="toastMsg" class="text-sm font-medium">Aktion erfolgreich</span>
+    </div>
+
+    <!-- Detail View Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden">
+            <div class="bg-slate-900/80 p-6 border-b border-slate-700/60 flex justify-between items-start">
+                <div>
+                    <span id="detailBadge" class="text-xs uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-semibold">Transaktion</span>
+                    <h2 id="detailMerchant" class="text-2xl font-bold text-white mt-2">Händler Name</h2>
+                    <p id="detailDate" class="text-slate-400 text-xs mt-1">00.00.0000</p>
+                </div>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white p-1 rounded-xl hover:bg-slate-700 transition">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50">
+                        <p class="text-xs text-slate-400 font-medium">Betrag in EUR</p>
+                        <p id="detailAmountEur" class="text-xl font-bold text-white mt-1">0,00 €</p>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50">
+                        <p class="text-xs text-slate-400 font-medium">Betrag in TRY</p>
+                        <p id="detailAmountTry" class="text-xl font-bold text-emerald-400 mt-1">₺ 0,00</p>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50">
+                        <p class="text-xs text-slate-400 font-medium">Wechselkurs (TRY/€)</p>
+                        <p id="detailRate" class="text-base font-bold text-amber-400 mt-1">0.00</p>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50">
+                        <p class="text-xs text-slate-400 font-medium">Zahlplan möglich?</p>
+                        <p id="detailPlan" class="text-base font-bold text-indigo-300 mt-1">Nein</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-700/60 flex flex-wrap gap-3 justify-end">
+                    <button id="detailExportBtn" class="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95 shadow-lg shadow-rose-600/20">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span>PDF Exportieren</span>
+                    </button>
+                    <button id="detailSendBtn" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95 shadow-lg shadow-indigo-600/20">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>Per E-Mail senden</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit/Add Modal -->
+    <div id="editModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-md w-full shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 bg-slate-900/80 border-b border-slate-700/60 flex justify-between items-center">
+                <h3 id="editModalTitle" class="font-bold text-white text-lg">Umsatz bearbeiten</h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="editForm" onsubmit="saveEntry(event)" class="p-6 space-y-4">
+                <input type="hidden" id="editId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Händler Name</label>
+                    <input type="text" id="editMerchant" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Datum</label>
+                    <input type="date" id="editDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Betrag (€)</label>
+                        <input type="number" step="0.01" id="editAmountEur" required oninput="recalculateTry()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Wechselkurs (TRY/€)</label>
+                        <input type="number" step="0.0001" id="editRate" required oninput="recalculateTry()" value="55.03" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Betrag (TRY)</label>
+                        <input type="number" step="0.01" id="editAmountTry" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-emerald-400 font-semibold focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Zahlplan</label>
+                        <select id="editPlan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                            <option value="Nein">Nein</option>
+                            <option value="Ja">Ja</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-700/60">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2.5 border border-slate-700 text-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-700 transition">Abbrechen</button>
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition shadow-lg shadow-indigo-600/20">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Exact dataset extracted from user uploaded CSV files
+        let dataset = [
+            { id: 1, merchant: "Urart", date: "2026-08-12", eur: 61.72, try: 3396.86, rate: 55.0366, plan: "Nein" },
+            { id: 2, merchant: "OMER BOGA", date: "2026-08-13", eur: 17.17, try: 945.00, rate: 55.0378, plan: "Nein" },
+            { id: 3, merchant: "BUQLE MAGAZACILIK", date: "2026-08-13", eur: 205.32, try: 11299.90, rate: 55.0355, plan: "Ja" },
+            { id: 4, merchant: "BUQLE MAGAZACILIK", date: "2026-08-13", eur: 127.19, try: 6999.90, rate: 55.0349, plan: "Ja" },
+            { id: 5, merchant: "Yeşil Kundura", date: "2026-08-13", eur: 46.32, try: 2549.40, rate: 55.0388, plan: "Nein" },
+            { id: 6, merchant: "A101", date: "2026-08-13", eur: 43.62, try: 2400.40, rate: 55.0298, plan: "Nein" },
+            { id: 7, merchant: "TK Tarım", date: "2026-08-14", eur: 36.76, try: 2023.90, rate: 55.0571, plan: "Nein" },
+            { id: 8, merchant: "Çiçek İç Giyim", date: "2026-08-14", eur: 136.09, try: 7483.56, rate: 54.9897, plan: "Ja" },
+            { id: 9, merchant: "A101", date: "2026-08-14", eur: 18.16, try: 1000.00, rate: 55.0660, plan: "Nein" },
+            { id: 10, merchant: "GÜNEŞ AKARYAKIT", date: "2026-08-14", eur: 18.16, try: 1000.00, rate: 55.0660, plan: "Nein" },
+            { id: 11, merchant: "KÖFTECİ YUSUF", date: "2026-08-15", eur: 22.16, try: 1220.00, rate: 55.0541, plan: "Nein" },
+            { id: 12, merchant: "MİGROS", date: "2026-08-15", eur: 14.89, try: 820.12, rate: 55.0785, plan: "Nein" },
+            { id: 13, merchant: "LC WAIKIKI", date: "2026-08-15", eur: 181.16, try: 10000.00, rate: 55.1998, plan: "Ja" },
+            { id: 14, merchant: "SHELL", date: "2026-08-16", eur: 36.23, try: 2000.00, rate: 55.2028, plan: "Nein" },
+            { id: 15, merchant: "STARBUCKS", date: "2026-08-16", eur: 8.50, try: 469.50, rate: 55.2352, plan: "Nein" },
+            { id: 16, merchant: "DECATHLON", date: "2026-08-17", eur: 54.12, try: 2990.00, rate: 55.2475, plan: "Nein" },
+            { id: 17, merchant: "A101", date: "2026-08-17", eur: 12.40, try: 685.00, rate: 55.2419, plan: "Nein" },
+            { id: 18, merchant: "TECHNOSA", date: "2026-08-18", eur: 95.00, try: 5250.00, rate: 55.2631, plan: "Nein" },
+            { id: 19, merchant: "CARREFOUR", date: "2026-08-18", eur: 24.50, try: 1354.00, rate: 55.2653, plan: "Nein" },
+            { id: 20, merchant: "ECZANE SEVGI", date: "2026-08-19", eur: 55.95, try: 3090.00, rate: 55.2278, plan: "Nein" }
+        ];
+
+        const MINIMUM_WAGE_TRY = 28075.00;
+        let filteredData = [...dataset];
+
+        window.onload = () => {
+            applyFilters();
+            lucide.createIcons();
+        };
+
+        function render() {
+            updateStats();
+            renderTable();
+            lucide.createIcons();
+        }
+
+        function updateStats() {
+            const sumEur = filteredData.reduce((acc, curr) => acc + curr.eur, 0);
+            const sumTry = filteredData.reduce((acc, curr) => acc + curr.try, 0);
+            const avgRate = sumEur > 0 ? (sumTry / sumEur) : 0;
+            const factorMinWage = (sumTry / MINIMUM_WAGE_TRY).toFixed(2);
+
+            document.getElementById('statEur').innerText = formatEur(sumEur);
+            document.getElementById('statTry').innerText = formatTry(sumTry);
+            document.getElementById('statRate').innerText = avgRate.toFixed(2) + " TRY";
+            document.getElementById('statMinWage').innerText = factorMinWage + "x";
+
+            // Zahlplan breakdown
+            const planYes = dataset.filter(d => d.plan === "Ja");
+            const planNo = dataset.filter(d => d.plan === "Nein");
+
+            document.getElementById('planYesSum').innerText = formatEur(planYes.reduce((a, b) => a + b.eur, 0));
+            document.getElementById('planYesCount').innerText = `${planYes.length} Buchungen`;
+
+            document.getElementById('planNoSum').innerText = formatEur(planNo.reduce((a, b) => a + b.eur, 0));
+            document.getElementById('planNoCount').innerText = `${planNo.length} Buchungen`;
+
+            document.getElementById('recordCount').innerText = `${filteredData.length} Einträge`;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const empty = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            } else {
+                empty.classList.add('hidden');
+            }
+
+            filteredData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-700/30 transition border-b border-slate-700/30";
+                tr.innerHTML = `
+                    <td class="py-3.5 px-6 font-bold text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-xs text-indigo-300 font-bold">
+                            ${item.merchant.substring(0, 2).toUpperCase()}
+                        </div>
+                        ${escapeHtml(item.merchant)}
+                    </td>
+                    <td class="py-3.5 px-4 text-slate-400 text-xs">${formatDate(item.date)}</td>
+                    <td class="py-3.5 px-4 font-bold text-white">${formatEur(item.eur)}</td>
+                    <td class="py-3.5 px-4 text-emerald-400 font-semibold">${formatTry(item.try)}</td>
+                    <td class="py-3.5 px-4 text-amber-300/90 font-mono text-xs">${item.rate.toFixed(2)}</td>
+                    <td class="py-3.5 px-4">${getPlanBadge(item.plan)}</td>
+                    <td class="py-3.5 px-6 text-right">
+                        <div class="flex justify-end gap-1">
+                            <button onclick="openDetailModal(${item.id})" class="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-700/60 rounded-xl transition" title="Details">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="openEditModal(${item.id})" class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-700/60 rounded-xl transition" title="Bearbeiten">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="exportSinglePDF(${item.id})" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 rounded-xl transition" title="PDF">
+                                <i data-lucide="file-text" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteEntry(${item.id})" class="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-700/60 rounded-xl transition" title="Löschen">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const plan = document.getElementById('planFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+
+            filteredData = dataset.filter(item => {
+                const matchesQuery = item.merchant.toLowerCase().includes(query);
+                const matchesPlan = plan === 'ALL' || item.plan === plan;
+                return matchesQuery && matchesPlan;
+            });
+
+            // Sorting
+            filteredData.sort((a, b) => {
+                if (sortBy === 'date-desc') return new Date(b.date) - new Date(a.date);
+                if (sortBy === 'date-asc') return new Date(a.date) - new Date(b.date);
+                if (sortBy === 'amount-desc') return b.eur - a.eur;
+                if (sortBy === 'amount-asc') return a.eur - b.eur;
+            });
+
+            render();
+        }
+
+        // Modal Handlers
+        function openDetailModal(id) {
+            const item = dataset.find(d => d.id === id);
+            if (!item) return;
+
+            document.getElementById('detailMerchant').innerText = item.merchant;
+            document.getElementById('detailDate').innerText = `Transaktion vom ${formatDate(item.date)}`;
+            document.getElementById('detailAmountEur').innerText = formatEur(item.eur);
+            document.getElementById('detailAmountTry').innerText = formatTry(item.try);
+            document.getElementById('detailRate').innerText = item.rate.toFixed(4) + " TRY/€";
+            document.getElementById('detailPlan').innerText = item.plan;
+
+            document.getElementById('detailExportBtn').onclick = () => exportSinglePDF(item.id);
+            document.getElementById('detailSendBtn').onclick = () => sendByEmail(item.id);
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function openEditModal(id = null) {
+            const form = document.getElementById('editForm');
+            form.reset();
+
+            if (id) {
+                const item = dataset.find(d => d.id === id);
+                if (!item) return;
+                document.getElementById('editModalTitle').innerText = "Umsatz bearbeiten";
+                document.getElementById('editId').value = item.id;
+                document.getElementById('editMerchant').value = item.merchant;
+                document.getElementById('editDate').value = item.date;
+                document.getElementById('editAmountEur').value = item.eur;
+                document.getElementById('editRate').value = item.rate;
+                document.getElementById('editAmountTry').value = item.try;
+                document.getElementById('editPlan').value = item.plan;
+            } else {
+                document.getElementById('editModalTitle').innerText = "Neuen Umsatz hinzufügen";
+                document.getElementById('editId').value = '';
+                document.getElementById('editDate').value = new Date().toISOString().split('T')[0];
+            }
+
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function recalculateTry() {
+            const eur = parseFloat(document.getElementById('editAmountEur').value) || 0;
+            const rate = parseFloat(document.getElementById('editRate').value) || 0;
+            document.getElementById('editAmountTry').value = (eur * rate).toFixed(2);
+        }
+
+        function saveEntry(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const eur = parseFloat(document.getElementById('editAmountEur').value) || 0;
+            const rate = parseFloat(document.getElementById('editRate').value) || 0;
+            const tryVal = parseFloat(document.getElementById('editAmountTry').value) || (eur * rate);
+
+            const newItem = {
+                id: id ? parseInt(id) : Date.now(),
+                merchant: document.getElementById('editMerchant').value,
+                date: document.getElementById('editDate').value,
+                eur: eur,
+                rate: rate,
+                try: tryVal,
+                plan: document.getElementById('editPlan').value
+            };
+
+            if (id) {
+                const idx = dataset.findIndex(d => d.id === parseInt(id));
+                if (idx !== -1) dataset[idx] = newItem;
+                showToast("Umsatz erfolgreich aktualisiert!");
+            } else {
+                dataset.unshift(newItem);
+                showToast("Neuer Umsatz hinzugefügt!");
+            }
+
+            closeEditModal();
+            applyFilters();
+        }
+
+        function deleteEntry(id) {
+            if (confirm("Möchtest du diesen Eintrag wirklich löschen?")) {
+                dataset = dataset.filter(d => d.id !== id);
+                showToast("Eintrag gelöscht");
+                applyFilters();
+            }
+        }
+
+        // PDF Generation - Single Record
+        function exportSinglePDF(id) {
+            const item = dataset.find(d => d.id === id);
+            if (!item) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Header Banner
+            doc.setFillColor(30, 27, 75);
+            doc.rect(0, 0, 210, 40, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("TRANSAKTIONSBELEG", 15, 25);
+
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Beleg-Nr: #DELUXE-${item.id}`, 150, 20);
+            doc.text(`Datum: ${formatDate(item.date)}`, 150, 27);
+
+            // Table Body
+            doc.autoTable({
+                startY: 50,
+                head: [['Parameter', 'Wert / Details']],
+                body: [
+                    ['Händler / Akzeptanzstelle', item.merchant],
+                    ['Buchungsdatum', formatDate(item.date)],
+                    ['Betrag in EUR (€)', formatEur(item.eur)],
+                    ['Betrag in TRY (₺)', formatTry(item.try)],
+                    ['Angewendeter Wechselkurs', `${item.rate.toFixed(4)} TRY/€`],
+                    ['Zahlplan vereinbart', item.plan]
+                ],
+                theme: 'striped',
+                headStyles: { fillColor: [79, 70, 229] },
+                styles: { fontSize: 11, cellPadding: 5 }
+            });
+
+            // Footer / Notes
+            const finalY = doc.lastAutoTable.finalY + 20;
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(9);
+            doc.text("Dieser Beleg wurde automatisch aus dem Umsätze Deluxe Dashboard generiert.", 15, finalY);
+
+            doc.save(`Umsatzbeleg_${item.merchant.replace(/\s+/g, '_')}_${item.id}.pdf`);
+            showToast("Beleg als PDF heruntergeladen");
+        }
+
+        // PDF Generation - All Filtered Records
+        function exportAllToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            doc.setFillColor(30, 27, 75);
+            doc.rect(0, 0, 297, 30, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.text("UMSÄTZE DELUXE - GESAMTABRECHNUNG", 15, 20);
+
+            const totalEur = filteredData.reduce((a, b) => a + b.eur, 0);
+            const totalTry = filteredData.reduce((a, b) => a + b.try, 0);
+
+            const tableRows = filteredData.map(item => [
+                `#${item.id}`,
+                item.merchant,
+                formatDate(item.date),
+                formatEur(item.eur),
+                formatTry(item.try),
+                item.rate.toFixed(2),
+                item.plan
+            ]);
+
+            // Add Summary Row
+            tableRows.push([
+                'GESAMT',
+                `${filteredData.length} Buchungen`,
+                '-',
+                formatEur(totalEur),
+                formatTry(totalTry),
+                (totalTry / totalEur).toFixed(2),
+                '-'
+            ]);
+
+            doc.autoTable({
+                startY: 38,
+                head: [['ID', 'Händler', 'Datum', 'Betrag (€)', 'Betrag (TRY)', 'Wechselkurs', 'Zahlplan']],
+                body: tableRows,
+                theme: 'grid',
+                headStyles: { fillColor: [49, 46, 129] },
+                footStyles: { fillColor: [30, 27, 75], fontStyle: 'bold' }
+            });
+
+            doc.save(`Umsatze_Deluxe_Gesamtbericht_${new Date().toISOString().split('T')[0]}.pdf`);
+            showToast("Gesamtbericht als PDF gespeichert");
+        }
+
+        // Email Action
+        function sendByEmail(id) {
+            const item = dataset.find(d => d.id === id);
+            if (!item) return;
+
+            const subject = encodeURIComponent(`Transaktionsbeleg: ${item.merchant} (${formatEur(item.eur)})`);
+            const body = encodeURIComponent(`Hallo,\n\nhier sind die Details zur Transaktion:\n\nHändler: ${item.merchant}\nDatum: ${formatDate(item.date)}\nBetrag (€): ${formatEur(item.eur)}\nBetrag (TRY): ${formatTry(item.try)}\nWechselkurs: ${item.rate.toFixed(4)}\nZahlplan: ${item.plan}\n\nViele Grüße,\nUmsätze Deluxe Dashboard`);
+
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            showToast("E-Mail Programm geöffnet");
+        }
+
+        // Helper Functions
+        function formatEur(val) {
+            return (parseFloat(val) || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+        }
+
+        function formatTry(val) {
+            return "₺ " + (parseFloat(val) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return isNaN(d) ? dateStr : d.toLocaleDateString('de-DE');
+        }
+
+        function getPlanBadge(plan) {
+            if (plan === "Ja") {
+                return `<span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold">Ja</span>`;
+            }
+            return `<span class="bg-slate-700/50 text-slate-400 border border-slate-600/50 text-xs px-2.5 py-0.5 rounded-full font-medium">Nein</span>`;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+
