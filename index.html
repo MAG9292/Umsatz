@@ -61,7 +61,6 @@
 
         <!-- Top KPI Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <!-- Gesamt EUR -->
             <div class="bg-slate-800/60 border border-slate-700/50 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-indigo-500/50 transition-all">
                 <div class="flex justify-between items-start">
                     <div>
@@ -78,7 +77,6 @@
                 </div>
             </div>
 
-            <!-- Gesamt TRY -->
             <div class="bg-slate-800/60 border border-slate-700/50 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-emerald-500/50 transition-all">
                 <div class="flex justify-between items-start">
                     <div>
@@ -94,7 +92,6 @@
                 </div>
             </div>
 
-            <!-- Ø Wechselkurs -->
             <div class="bg-slate-800/60 border border-slate-700/50 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-amber-500/50 transition-all">
                 <div class="flex justify-between items-start">
                     <div>
@@ -111,7 +108,6 @@
                 </div>
             </div>
 
-            <!-- Mindestlohn Vergleich -->
             <div class="bg-slate-800/60 border border-slate-700/50 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-violet-500/50 transition-all">
                 <div class="flex justify-between items-start">
                     <div>
@@ -130,7 +126,6 @@
 
         <!-- Zahlplan & Filter -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Zahlplan Summary -->
             <div class="bg-slate-800/40 border border-slate-700/50 p-5 rounded-2xl flex flex-col justify-between space-y-4">
                 <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                     <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400"></i>
@@ -150,7 +145,6 @@
                 </div>
             </div>
 
-            <!-- Search & Filters -->
             <div class="lg:col-span-2 bg-slate-800/40 border border-slate-700/50 p-5 rounded-2xl flex flex-col justify-between space-y-4">
                 <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                     <i data-lucide="filter" class="w-4 h-4 text-indigo-400"></i>
@@ -385,16 +379,29 @@
         function initFirestoreListener() {
             const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
             
-            onSnapshot(colRef, (snapshot) => {
+            onSnapshot(colRef, async (snapshot) => {
                 dataset = [];
                 snapshot.forEach((docSnap) => {
                     dataset.push({ docId: docSnap.id, ...docSnap.data() });
                 });
 
+                // Auto-seed if database is completely empty
                 if (dataset.length === 0) {
-                    document.getElementById('emptyState').classList.remove('hidden');
+                    for (const item of defaultDataset) {
+                        await addDoc(colRef, {
+                            id: item.id,
+                            merchant: item.merchant,
+                            date: item.date,
+                            eur: item.eur,
+                            try: item.try,
+                            rate: item.rate,
+                            plan: item.plan
+                        });
+                    }
+                    return; // onSnapshot will trigger again with the new data
                 }
 
+                document.getElementById('emptyState').classList.add('hidden');
                 window.applyFilters();
                 lucide.createIcons();
             }, (error) => {
@@ -403,7 +410,7 @@
         }
 
         window.seedInitialDataIfNeeded = async function() {
-            if (confirm("Möchtest du die 20 Original-Buchungen in die Cloud laden?")) {
+            if (confirm("Möchtest du die 20 Original-Buchungen erneut in die Cloud laden?")) {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
                 for (const item of defaultDataset) {
                     await addDoc(colRef, {
@@ -421,21 +428,26 @@
         };
 
         window.applyFilters = function() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const plan = document.getElementById('planFilter').value;
-            const sortBy = document.getElementById('sortBy').value;
+            const searchInput = document.getElementById('searchInput');
+            const planFilter = document.getElementById('planFilter');
+            const sortBy = document.getElementById('sortBy');
+
+            const query = searchInput ? searchInput.value.toLowerCase() : '';
+            const plan = planFilter ? planFilter.value : 'ALL';
+            const sort = sortBy ? sortBy.value : 'date-desc';
 
             filteredData = dataset.filter(item => {
-                const matchesQuery = item.merchant.toLowerCase().includes(query);
+                const merchant = item.merchant || '';
+                const matchesQuery = merchant.toLowerCase().includes(query);
                 const matchesPlan = plan === 'ALL' || item.plan === plan;
                 return matchesQuery && matchesPlan;
             });
 
             filteredData.sort((a, b) => {
-                if (sortBy === 'date-desc') return b.id - a.id;
-                if (sortBy === 'date-asc') return a.id - b.id;
-                if (sortBy === 'amount-desc') return b.eur - a.eur;
-                if (sortBy === 'amount-asc') return a.eur - b.eur;
+                if (sort === 'date-desc') return (b.id || 0) - (a.id || 0);
+                if (sort === 'date-asc') return (a.id || 0) - (b.id || 0);
+                if (sort === 'amount-desc') return (b.eur || 0) - (a.eur || 0);
+                if (sort === 'amount-asc') return (a.eur || 0) - (b.eur || 0);
             });
 
             render();
@@ -448,8 +460,8 @@
         }
 
         function updateStats() {
-            const sumEur = filteredData.reduce((acc, curr) => acc + curr.eur, 0);
-            const sumTry = filteredData.reduce((acc, curr) => acc + curr.try, 0);
+            const sumEur = filteredData.reduce((acc, curr) => acc + (curr.eur || 0), 0);
+            const sumTry = filteredData.reduce((acc, curr) => acc + (curr.try || 0), 0);
             
             const effectiveAvgRate = sumEur > 0 ? (sumTry / sumEur) : 0;
             const factorMinWage = (sumTry / MINIMUM_WAGE_TRY).toFixed(2);
@@ -462,11 +474,11 @@
             const planYes = filteredData.filter(d => d.plan === "Ja");
             const planNo = filteredData.filter(d => d.plan === "Nein");
 
-            document.getElementById('planYesSum').innerText = formatEur(planYes.reduce((a, b) => a + b.eur, 0));
-            document.getElementById('planYesCount').innerText = `${planYes.length} Buchungen (${formatTry(planYes.reduce((a, b) => a + b.try, 0))})`;
+            document.getElementById('planYesSum').innerText = formatEur(planYes.reduce((a, b) => a + (b.eur || 0), 0));
+            document.getElementById('planYesCount').innerText = `${planYes.length} Buchungen (${formatTry(planYes.reduce((a, b) => a + (b.try || 0), 0))})`;
 
-            document.getElementById('planNoSum').innerText = formatEur(planNo.reduce((a, b) => a + b.eur, 0));
-            document.getElementById('planNoCount').innerText = `${planNo.length} Buchungen (${formatTry(planNo.reduce((a, b) => a + b.try, 0))})`;
+            document.getElementById('planNoSum').innerText = formatEur(planNo.reduce((a, b) => a + (b.eur || 0), 0));
+            document.getElementById('planNoCount').innerText = `${planNo.length} Buchungen (${formatTry(planNo.reduce((a, b) => a + (b.try || 0), 0))})`;
 
             document.getElementById('recordCount').innerText = `${filteredData.length} Einträge`;
             document.getElementById('statSubText').innerText = `${filteredData.length} Buchungen erfasst`;
@@ -475,27 +487,28 @@
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             const empty = document.getElementById('emptyState');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             if (filteredData.length === 0) {
-                empty.classList.remove('hidden');
+                if (empty) empty.classList.remove('hidden');
                 return;
             } else {
-                empty.classList.add('hidden');
+                if (empty) empty.classList.add('hidden');
             }
 
             filteredData.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-700/30 transition border-b border-slate-700/30";
                 tr.innerHTML = `
-                    <td class="py-3.5 px-6 font-mono text-xs text-slate-400">#${item.id || item.docId.substring(0,4)}</td>
+                    <td class="py-3.5 px-6 font-mono text-xs text-slate-400">#${item.id || (item.docId ? item.docId.substring(0,4) : '1')}</td>
                     <td class="py-3.5 px-6 font-bold text-white flex items-center gap-3">
                         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xs text-indigo-300 font-bold">
                             ${getInitials(item.merchant)}
                         </div>
                         ${escapeHtml(item.merchant)}
                     </td>
-                    <td class="py-3.5 px-4 text-slate-400 text-xs">${item.date}</td>
+                    <td class="py-3.5 px-4 text-slate-400 text-xs">${item.date || ''}</td>
                     <td class="py-3.5 px-4 font-bold text-white">${formatEur(item.eur)}</td>
                     <td class="py-3.5 px-4 text-emerald-400 font-semibold">${formatTry(item.try)}</td>
                     <td class="py-3.5 px-4 text-amber-300/90 font-mono text-xs">${(item.rate || 0).toFixed(2).replace('.', ',')}</td>
@@ -542,7 +555,7 @@
                 if (eur > 0 && rate > 0) {
                     tryInput.value = (eur * rate).toFixed(2);
                 } else if (tryVal > 0 && rate > 0) {
-                    eurInput.value = (tryVal / rate).toFixed(2);
+                    tryInput.value = (tryVal / rate).toFixed(2);
                 }
             }
         }
@@ -579,7 +592,7 @@
 
         window.openEditModal = function(docId = null) {
             const form = document.getElementById('editForm');
-            form.reset();
+            if (form) form.reset();
 
             if (docId) {
                 const item = dataset.find(d => d.docId === docId);
@@ -587,12 +600,12 @@
                 document.getElementById('editModalTitle').innerText = "Umsatz in Cloud bearbeiten";
                 document.getElementById('editDocId').value = item.docId;
                 document.getElementById('editId').value = item.id || 1;
-                document.getElementById('editMerchant').value = item.merchant;
-                document.getElementById('editDate').value = item.date;
-                document.getElementById('editAmountEur').value = item.eur;
-                document.getElementById('editAmountTry').value = item.try;
+                document.getElementById('editMerchant').value = item.merchant || '';
+                document.getElementById('editDate').value = item.date || '';
+                document.getElementById('editAmountEur').value = item.eur || '';
+                document.getElementById('editAmountTry').value = item.try || '';
                 document.getElementById('editRate').value = (item.rate || 0).toFixed(4);
-                document.getElementById('editPlan').value = item.plan;
+                document.getElementById('editPlan').value = item.plan || 'Nein';
             } else {
                 document.getElementById('editModalTitle').innerText = "Neuen Umsatz in Cloud hinzufügen";
                 document.getElementById('editDocId').value = '';
@@ -785,8 +798,8 @@
             doc.setFont("helvetica", "normal");
             doc.text(`Abrechnung vom: ${new Date().toLocaleDateString('de-DE')} | Turkiye Finans Ozeti`, 56, 27);
 
-            const totalEur = filteredData.reduce((a, b) => a + b.eur, 0);
-            const totalTry = filteredData.reduce((a, b) => a + b.try, 0);
+            const totalEur = filteredData.reduce((a, b) => a + (b.eur || 0), 0);
+            const totalTry = filteredData.reduce((a, b) => a + (b.try || 0), 0);
             const avgRate = totalEur > 0 ? (totalTry / totalEur) : 0;
             const minWageFactor = (totalTry / MINIMUM_WAGE_TRY).toFixed(2);
 
@@ -900,6 +913,7 @@
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
+            if (!toast) return;
             document.getElementById('toastMsg').innerText = msg;
             toast.classList.remove('translate-y-24', 'opacity-0');
             setTimeout(() => {
