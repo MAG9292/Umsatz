@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,9 +11,12 @@
     <!-- jsPDF & AutoTable CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
@@ -22,15 +25,17 @@
     <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
-                <div class="p-2.5 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl shadow-lg shadow-indigo-500/20">
+                <div class="p-2.5 bg-gradient-to-tr from-rose-600 to-red-500 rounded-xl shadow-lg shadow-rose-600/20">
                     <i data-lucide="gem" class="w-6 h-6 text-white"></i>
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                         Umsätze Deluxe
-                        <span class="text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full">Exakte Daten</span>
+                        <span class="text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span>🇹🇷</span>
+                        </span>
                     </h1>
-                    <p class="text-xs text-slate-400">Auswertung aus Umsatze_Deluxe_Dashboard.xlsx</p>
+                    <p class="text-xs text-slate-400">by MeMo92</p>
                 </div>
             </div>
 
@@ -39,9 +44,9 @@
                     <i data-lucide="plus-circle" class="w-4 h-4"></i>
                     <span>Neuer Umsatz</span>
                 </button>
-                <button onclick="exportAllToPDF()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95">
-                    <i data-lucide="file-text" class="w-4 h-4 text-rose-400"></i>
-                    <span>Gesamt-PDF</span>
+                <button onclick="exportAllToPDF()" class="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-white border border-rose-500/30 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-rose-600/20">
+                    <i data-lucide="file-text" class="w-4 h-4 text-white"></i>
+                    <span>Gesamt-PDF Export</span>
                 </button>
             </div>
         </div>
@@ -65,7 +70,7 @@
                 </div>
                 <div class="mt-3 flex items-center text-xs text-slate-400 gap-1">
                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-                    <span>20 Transaktionen exakt übernommen</span>
+                    <span id="statSubText">20 Buchungen erfasst</span>
                 </div>
             </div>
 
@@ -85,11 +90,11 @@
                 </div>
             </div>
 
-            <!-- Ø Wechselkurs -->
+            <!-- Ø Wechselkurs (Auto-calculated) -->
             <div class="bg-slate-800/60 border border-slate-700/50 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-amber-500/50 transition-all">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ø Wechselkurs</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ø Wechselkurs (Auto)</p>
                         <h3 id="statRate" class="text-2xl font-extrabold text-amber-400 mt-2">55,12 TRY</h3>
                     </div>
                     <div class="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
@@ -97,7 +102,8 @@
                     </div>
                 </div>
                 <div class="mt-3 flex items-center text-xs text-slate-400 gap-1">
-                    <span>Effektiver Kurs (TRY/€)</span>
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-amber-400 animate-spin"></i>
+                    <span>Automatisch live</span>
                 </div>
             </div>
 
@@ -106,7 +112,7 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Faktor Mindestlohn</p>
-                        <h3 id="statMinWage" class="text-2xl font-extrabold text-violet-400 mt-2">2.34x</h3>
+                        <h3 id="statMinWage" class="text-2xl font-extrabold text-violet-400 mt-2">2,34x</h3>
                     </div>
                     <div class="p-3 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-xl">
                         <i data-lucide="scale" class="w-6 h-6"></i>
@@ -118,7 +124,7 @@
             </div>
         </div>
 
-        <!-- Mindestlohn & Zahlplan Breakdown Card -->
+        <!-- Zahlplan & Filter -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Zahlplan Summary -->
             <div class="bg-slate-800/40 border border-slate-700/50 p-5 rounded-2xl flex flex-col justify-between space-y-4">
@@ -149,7 +155,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div class="relative sm:col-span-1">
                         <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Händler suchen (z. B. Urart)..." class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Händler suchen (z. B. Çiçek, Yeşil)..." class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <select id="planFilter" onchange="applyFilters()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
@@ -184,11 +190,12 @@
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="bg-slate-900/40 text-slate-400 border-b border-slate-700/60 font-semibold text-xs uppercase tracking-wider">
+                            <th class="py-3.5 px-6">ID</th>
                             <th class="py-3.5 px-6">Händler</th>
                             <th class="py-3.5 px-4">Datum</th>
                             <th class="py-3.5 px-4">Betrag (€)</th>
                             <th class="py-3.5 px-4">Betrag (TRY)</th>
-                            <th class="py-3.5 px-4">Wechselkurs</th>
+                            <th class="py-3.5 px-4">Wechselkurs (TRY/€)</th>
                             <th class="py-3.5 px-4">Zahlplan</th>
                             <th class="py-3.5 px-6 text-right">Aktionen</th>
                         </tr>
@@ -278,22 +285,25 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Datum</label>
-                    <input type="date" id="editDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="editDate" placeholder="z. B. 12.08" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Betrag (€)</label>
-                        <input type="number" step="0.01" id="editAmountEur" required oninput="recalculateTry()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" step="0.01" id="editAmountEur" required oninput="calcExchangeRate('eur')" placeholder="61.72" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Wechselkurs (TRY/€)</label>
-                        <input type="number" step="0.0001" id="editRate" required oninput="recalculateTry()" value="55.0366" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Betrag (TRY ₺)</label>
+                        <input type="number" step="0.01" id="editAmountTry" required oninput="calcExchangeRate('try')" placeholder="3396.86" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-emerald-400 font-semibold focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Betrag (TRY)</label>
-                        <input type="number" step="0.01" id="editAmountTry" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-emerald-400 font-semibold focus:outline-none focus:border-indigo-500">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                            <span>Wechselkurs</span>
+                            <span class="text-[10px] text-amber-400 font-normal">Auto-Berechnet</span>
+                        </label>
+                        <input type="number" step="0.0001" id="editRate" required oninput="calcExchangeRate('rate')" placeholder="55.04" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-amber-300 font-mono font-semibold focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Zahlplan</label>
@@ -313,28 +323,28 @@
 
     <!-- Application Script -->
     <script>
-        // Exact 20 rows extracted from 'Umsatze_Deluxe_Dashboard.xlsx - Umsätze.csv'
+        // Exact 20 original transactions
         let dataset = [
-            { id: 1, merchant: "Urart", date: "2026-08-12", eur: 61.72, try: 3396.86, rate: 55.03661698, plan: "Nein" },
-            { id: 2, merchant: "OMER BOGA", date: "2026-08-13", eur: 17.17, try: 945.00, rate: 55.03785673, plan: "Nein" },
-            { id: 3, merchant: "BUQLE MAGAZACILIK", date: "2026-08-13", eur: 205.32, try: 11299.90, rate: 55.03555426, plan: "Ja" },
-            { id: 4, merchant: "BUQLE MAGAZACILIK", date: "2026-08-13", eur: 127.19, try: 6999.90, rate: 55.03498703, plan: "Ja" },
-            { id: 5, merchant: "Yeşil Kundura", date: "2026-08-13", eur: 46.32, try: 2549.40, rate: 55.0388601, plan: "Nein" },
-            { id: 6, merchant: "A101", date: "2026-08-13", eur: 43.62, try: 2400.40, rate: 55.02980284, plan: "Nein" },
-            { id: 7, merchant: "TK Tarım", date: "2026-08-14", eur: 36.76, try: 2023.90, rate: 55.05712731, plan: "Nein" },
-            { id: 8, merchant: "Çiçek İç Giyim", date: "2026-08-14", eur: 136.09, try: 7483.56, rate: 54.98978617, plan: "Ja" },
-            { id: 9, merchant: "A101", date: "2026-08-14", eur: 18.16, try: 1000.00, rate: 55.0660793, plan: "Nein" },
-            { id: 10, merchant: "GÜNEŞ AKARYAKIT", date: "2026-08-14", eur: 18.16, try: 1000.00, rate: 55.0660793, plan: "Nein" },
-            { id: 11, merchant: "KÖFTECİ YUSUF", date: "2026-08-15", eur: 22.16, try: 1220.00, rate: 55.05415162, plan: "Nein" },
-            { id: 12, merchant: "MİGROS", date: "2026-08-15", eur: 14.89, try: 820.12, rate: 55.07857623, plan: "Nein" },
-            { id: 13, merchant: "LC WAIKIKI", date: "2026-08-15", eur: 181.16, try: 10000.00, rate: 55.19982336, plan: "Ja" },
-            { id: 14, merchant: "SHELL", date: "2026-08-16", eur: 36.23, try: 2000.00, rate: 55.20287055, plan: "Nein" },
-            { id: 15, merchant: "STARBUCKS", date: "2026-08-16", eur: 8.50, try: 469.50, rate: 55.23529412, plan: "Nein" },
-            { id: 16, merchant: "DECATHLON", date: "2026-08-17", eur: 54.12, try: 2990.00, rate: 55.24759793, plan: "Nein" },
-            { id: 17, merchant: "A101", date: "2026-08-17", eur: 12.40, try: 685.00, rate: 55.24193548, plan: "Nein" },
-            { id: 18, merchant: "TECHNOSA", date: "2026-08-18", eur: 95.00, try: 5250.00, rate: 55.26315789, plan: "Nein" },
-            { id: 19, merchant: "CARREFOUR", date: "2026-08-18", eur: 24.50, try: 1354.00, rate: 55.26530612, plan: "Nein" },
-            { id: 20, merchant: "ECZANE SEVGI", date: "2026-08-19", eur: 55.95, try: 3090.00, rate: 55.22788204, plan: "Nein" }
+            { id: 1, merchant: "Urart", date: "12.08", eur: 61.72, try: 3396.86, rate: 55.0366, plan: "Nein" },
+            { id: 2, merchant: "OMER BOGA", date: "13.08", eur: 17.17, try: 945.00, rate: 55.0378, plan: "Nein" },
+            { id: 3, merchant: "BUQLE MAGAZACILIK", date: "13.08", eur: 205.32, try: 11299.90, rate: 55.0355, plan: "Ja" },
+            { id: 4, merchant: "BUQLE MAGAZACILIK", date: "13.08", eur: 127.19, try: 6999.90, rate: 55.0349, plan: "Ja" },
+            { id: 5, merchant: "Yeşil Kundura", date: "13.08", eur: 46.32, try: 2549.40, rate: 55.0388, plan: "Nein" },
+            { id: 6, merchant: "A101", date: "13.08", eur: 43.62, try: 2400.40, rate: 55.0298, plan: "Nein" },
+            { id: 7, merchant: "TK Tarım", date: "14.08", eur: 36.76, try: 2023.90, rate: 55.0571, plan: "Nein" },
+            { id: 8, merchant: "Çiçek İç Giyim", date: "14.08", eur: 136.09, try: 7493.56, rate: 55.0632, plan: "Ja" },
+            { id: 9, merchant: "Ada Abiye", date: "15.08", eur: 181.16, try: 9990.00, rate: 55.1446, plan: "Ja" },
+            { id: 10, merchant: "Buse Giyim AS Tekstil", date: "15.08", eur: 89.76, try: 4950.00, rate: 55.1470, plan: "Nein" },
+            { id: 11, merchant: "Gökçe Sıddıka Çorum", date: "16.08", eur: 16.32, try: 900.00, rate: 55.1470, plan: "Nein" },
+            { id: 12, merchant: "Market (Sigara)", date: "16.08", eur: 2.36, try: 130.00, rate: 55.0847, plan: "Nein" },
+            { id: 13, merchant: "Shell Refahiye", date: "16.08", eur: 20.22, try: 1115.00, rate: 55.1434, plan: "Nein" },
+            { id: 14, merchant: "Shell Refahiye", date: "16.08", eur: 12.69, try: 700.00, rate: 55.1615, plan: "Nein" },
+            { id: 15, merchant: "Öz Efendioğulları", date: "17.08", eur: 5.44, try: 300.00, rate: 55.1470, plan: "Nein" },
+            { id: 16, merchant: "Tamsas Kars", date: "17.08", eur: 32.93, try: 1816.16, rate: 55.1521, plan: "Nein" },
+            { id: 17, merchant: "LC Waikiki Kars", date: "18.08", eur: 73.12, try: 4054.95, rate: 55.4561, plan: "Nein" },
+            { id: 18, merchant: "Pasha Café", date: "18.08", eur: 48.41, try: 2685.00, rate: 55.4637, plan: "Nein" },
+            { id: 19, merchant: "Kıyma", date: "19.08", eur: 16.23, try: 900.00, rate: 55.4528, plan: "Nein" },
+            { id: 20, merchant: "BİM", date: "20.08", eur: 21.90, try: 1211.50, rate: 55.3196, plan: "Nein" }
         ];
 
         const MINIMUM_WAGE_TRY = 28075.00;
@@ -354,17 +364,18 @@
         function updateStats() {
             const sumEur = filteredData.reduce((acc, curr) => acc + curr.eur, 0);
             const sumTry = filteredData.reduce((acc, curr) => acc + curr.try, 0);
-            const effectiveRate = sumEur > 0 ? (sumTry / sumEur) : 0;
+            
+            const effectiveAvgRate = sumEur > 0 ? (sumTry / sumEur) : 0;
             const factorMinWage = (sumTry / MINIMUM_WAGE_TRY).toFixed(2);
 
             document.getElementById('statEur').innerText = formatEur(sumEur);
             document.getElementById('statTry').innerText = formatTry(sumTry);
-            document.getElementById('statRate').innerText = effectiveRate.toFixed(2) + " TRY";
-            document.getElementById('statMinWage').innerText = factorMinWage + "x";
+            document.getElementById('statRate').innerText = effectiveAvgRate.toFixed(2).replace('.', ',') + " TRY";
+            document.getElementById('statMinWage').innerText = factorMinWage.replace('.', ',') + "x";
 
             // Zahlplan breakdown
-            const planYes = dataset.filter(d => d.plan === "Ja");
-            const planNo = dataset.filter(d => d.plan === "Nein");
+            const planYes = filteredData.filter(d => d.plan === "Ja");
+            const planNo = filteredData.filter(d => d.plan === "Nein");
 
             document.getElementById('planYesSum').innerText = formatEur(planYes.reduce((a, b) => a + b.eur, 0));
             document.getElementById('planYesCount').innerText = `${planYes.length} Buchungen (${formatTry(planYes.reduce((a, b) => a + b.try, 0))})`;
@@ -373,6 +384,7 @@
             document.getElementById('planNoCount').innerText = `${planNo.length} Buchungen (${formatTry(planNo.reduce((a, b) => a + b.try, 0))})`;
 
             document.getElementById('recordCount').innerText = `${filteredData.length} Einträge`;
+            document.getElementById('statSubText').innerText = `${filteredData.length} Buchungen erfasst`;
         }
 
         function renderTable() {
@@ -391,16 +403,17 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-700/30 transition border-b border-slate-700/30";
                 tr.innerHTML = `
+                    <td class="py-3.5 px-6 font-mono text-xs text-slate-400">#${item.id}</td>
                     <td class="py-3.5 px-6 font-bold text-white flex items-center gap-3">
                         <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xs text-indigo-300 font-bold">
-                            ${item.merchant.substring(0, 2).toUpperCase()}
+                            ${getInitials(item.merchant)}
                         </div>
                         ${escapeHtml(item.merchant)}
                     </td>
-                    <td class="py-3.5 px-4 text-slate-400 text-xs">${formatDate(item.date)}</td>
+                    <td class="py-3.5 px-4 text-slate-400 text-xs">${item.date}</td>
                     <td class="py-3.5 px-4 font-bold text-white">${formatEur(item.eur)}</td>
                     <td class="py-3.5 px-4 text-emerald-400 font-semibold">${formatTry(item.try)}</td>
-                    <td class="py-3.5 px-4 text-amber-300/90 font-mono text-xs">${item.rate.toFixed(4)}</td>
+                    <td class="py-3.5 px-4 text-amber-300/90 font-mono text-xs">${item.rate.toFixed(2).replace('.', ',')}</td>
                     <td class="py-3.5 px-4">${getPlanBadge(item.plan)}</td>
                     <td class="py-3.5 px-6 text-right">
                         <div class="flex justify-end gap-1">
@@ -423,6 +436,41 @@
             });
         }
 
+        function calcExchangeRate(source) {
+            const eurInput = document.getElementById('editAmountEur');
+            const tryInput = document.getElementById('editAmountTry');
+            const rateInput = document.getElementById('editRate');
+
+            let eur = parseFloat(eurInput.value) || 0;
+            let tryVal = parseFloat(tryInput.value) || 0;
+            let rate = parseFloat(rateInput.value) || 0;
+
+            if (source === 'eur' || source === 'try') {
+                if (eur > 0 && tryVal > 0) {
+                    rateInput.value = (tryVal / eur).toFixed(4);
+                } else if (eur > 0 && rate > 0 && source === 'eur') {
+                    tryInput.value = (eur * rate).toFixed(2);
+                } else if (tryVal > 0 && rate > 0 && source === 'try') {
+                    eurInput.value = (tryVal / rate).toFixed(2);
+                }
+            } else if (source === 'rate') {
+                if (eur > 0 && rate > 0) {
+                    tryInput.value = (eur * rate).toFixed(2);
+                } else if (tryVal > 0 && rate > 0) {
+                    eurInput.value = (tryVal / rate).toFixed(2);
+                }
+            }
+        }
+
+        function getInitials(str) {
+            if (!str) return '??';
+            const parts = str.trim().split(' ');
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            }
+            return str.substring(0, 2).toUpperCase();
+        }
+
         function applyFilters() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const plan = document.getElementById('planFilter').value;
@@ -436,8 +484,8 @@
 
             // Sorting
             filteredData.sort((a, b) => {
-                if (sortBy === 'date-desc') return new Date(b.date) - new Date(a.date);
-                if (sortBy === 'date-asc') return new Date(a.date) - new Date(b.date);
+                if (sortBy === 'date-desc') return b.id - a.id;
+                if (sortBy === 'date-asc') return a.id - b.id;
                 if (sortBy === 'amount-desc') return b.eur - a.eur;
                 if (sortBy === 'amount-asc') return a.eur - b.eur;
             });
@@ -451,10 +499,10 @@
             if (!item) return;
 
             document.getElementById('detailMerchant').innerText = item.merchant;
-            document.getElementById('detailDate').innerText = `Transaktion vom ${formatDate(item.date)}`;
+            document.getElementById('detailDate').innerText = `Transaktion am ${item.date}`;
             document.getElementById('detailAmountEur').innerText = formatEur(item.eur);
             document.getElementById('detailAmountTry').innerText = formatTry(item.try);
-            document.getElementById('detailRate').innerText = item.rate.toFixed(4) + " TRY/€";
+            document.getElementById('detailRate').innerText = item.rate.toFixed(4).replace('.', ',') + " TRY/€";
             document.getElementById('detailPlan').innerText = item.plan;
 
             document.getElementById('detailExportBtn').onclick = () => exportSinglePDF(item.id);
@@ -479,13 +527,14 @@
                 document.getElementById('editMerchant').value = item.merchant;
                 document.getElementById('editDate').value = item.date;
                 document.getElementById('editAmountEur').value = item.eur;
-                document.getElementById('editRate').value = item.rate;
                 document.getElementById('editAmountTry').value = item.try;
+                document.getElementById('editRate').value = item.rate.toFixed(4);
                 document.getElementById('editPlan').value = item.plan;
             } else {
                 document.getElementById('editModalTitle').innerText = "Neuen Umsatz hinzufügen";
                 document.getElementById('editId').value = '';
-                document.getElementById('editDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('editDate').value = "20.08";
+                document.getElementById('editRate').value = "55.04";
             }
 
             document.getElementById('editModal').classList.remove('hidden');
@@ -495,26 +544,24 @@
             document.getElementById('editModal').classList.add('hidden');
         }
 
-        function recalculateTry() {
-            const eur = parseFloat(document.getElementById('editAmountEur').value) || 0;
-            const rate = parseFloat(document.getElementById('editRate').value) || 0;
-            document.getElementById('editAmountTry').value = (eur * rate).toFixed(2);
-        }
-
         function saveEntry(e) {
             e.preventDefault();
             const id = document.getElementById('editId').value;
             const eur = parseFloat(document.getElementById('editAmountEur').value) || 0;
-            const rate = parseFloat(document.getElementById('editRate').value) || 0;
-            const tryVal = parseFloat(document.getElementById('editAmountTry').value) || (eur * rate);
+            const tryVal = parseFloat(document.getElementById('editAmountTry').value) || 0;
+            
+            let rate = parseFloat(document.getElementById('editRate').value) || 0;
+            if (rate === 0 && eur > 0) {
+                rate = tryVal / eur;
+            }
 
             const newItem = {
                 id: id ? parseInt(id) : Date.now(),
                 merchant: document.getElementById('editMerchant').value,
                 date: document.getElementById('editDate').value,
                 eur: eur,
-                rate: rate,
                 try: tryVal,
+                rate: rate,
                 plan: document.getElementById('editPlan').value
             };
 
@@ -539,7 +586,69 @@
             }
         }
 
-        // PDF Generation - Single Record
+        // ACCURATE GEOMETRIC TURKISH FLAG DRAWING IN PDF (Official Proportions)
+        function drawExactTurkishFlag(doc, x, y, width = 30) {
+            const height = (width * 2) / 3; // Official flag ratio 1.5 : 1
+            doc.saveGraphicsState();
+
+            // Flag Red Rectangle
+            doc.setFillColor(227, 10, 23); // Official Turkish Flag Red
+            doc.rect(x, y, width, height, 'F');
+
+            // Crescent Moon Construction
+            const cx = x + width * 0.35;
+            const cy = y + height * 0.5;
+            const outerR = height * 0.25;
+            const innerR = height * 0.2;
+            const innerCx = x + width * 0.4125;
+
+            // Outer White Circle
+            doc.setFillColor(255, 255, 255);
+            doc.circle(cx, cy, outerR, 'F');
+
+            // Inner Red Circle (Cutout)
+            doc.setFillColor(227, 10, 23);
+            doc.circle(innerCx, cy, innerR, 'F');
+
+            // 5-Pointed Star
+            const starCx = x + width * 0.58;
+            const starCy = cy;
+            const starR = height * 0.125;
+
+            doc.setFillColor(255, 255, 255);
+            drawStarPath(doc, starCx, starCy, 5, starR, starR * 0.38, -18); // Rotated to point left towards crescent
+
+            doc.restoreGraphicsState();
+        }
+
+        // Helper to draw a true 5-pointed star path in jsPDF
+        function drawStarPath(doc, cx, cy, spikes, outerRadius, innerRadius, rotationDeg = 0) {
+            const points = [];
+            let rot = (Math.PI / 180) * rotationDeg;
+            const step = Math.PI / spikes;
+
+            for (let i = 0; i < spikes * 2; i++) {
+                const r = (i % 2 === 0) ? outerRadius : innerRadius;
+                const px = cx + Math.cos(rot) * r;
+                const py = cy + Math.sin(rot) * r;
+                points.push({ x: px, y: py });
+                rot += step;
+            }
+
+            // Construct polygon path
+            doc.lines(
+                points.map((p, idx) => {
+                    const next = points[(idx + 1) % points.length];
+                    return [next.x - p.x, next.y - p.y];
+                }),
+                points[0].x,
+                points[0].y,
+                [1, 1],
+                'F'
+            );
+        }
+
+        // PDF Generation - Single Record with Correct Flag
         function exportSinglePDF(id) {
             const item = dataset.find(d => d.id === id);
             if (!item) return;
@@ -548,94 +657,162 @@
             const doc = new jsPDF();
 
             // Header Banner
-            doc.setFillColor(30, 27, 75);
-            doc.rect(0, 0, 210, 40, 'F');
+            doc.setFillColor(227, 10, 23); // Official Turkish Red
+            doc.rect(0, 0, 210, 38, 'F');
 
+            // Draw Exact Flag
+            drawExactTurkishFlag(doc, 14, 8, 33);
+
+            // Title & Subtitle
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(22);
+            doc.setFontSize(18);
             doc.setFont("helvetica", "bold");
-            doc.text("TRANSAKTIONSBELEG", 15, 25);
+            doc.text("TRANSAKTIONSBELEG", 56, 20);
 
-            doc.setFontSize(9);
+            doc.setFontSize(8.5);
             doc.setFont("helvetica", "normal");
-            doc.text(`Beleg-Nr: #DELUXE-${item.id}`, 150, 20);
-            doc.text(`Datum: ${formatDate(item.date)}`, 150, 27);
+            doc.text("UMSÄTZE DELUXE | TÜRKİYE FİNANS RAPORU", 56, 27);
 
-            // Table Body
+            // Right Box Info
+            doc.setFontSize(8.5);
+            doc.text(`Beleg-Nr: #DELUXE-${item.id}`, 152, 18);
+            doc.text(`Datum / Tarih: ${item.date}`, 152, 25);
+
+            // Item Details Table
             doc.autoTable({
-                startY: 50,
-                head: [['Parameter', 'Wert / Details']],
+                startY: 48,
+                head: [['Parameter / Özellik', 'Wert / Detay']],
                 body: [
-                    ['Händler / Akzeptanzstelle', item.merchant],
-                    ['Buchungsdatum', formatDate(item.date)],
+                    ['Händler / İşyeri Name', item.merchant],
+                    ['Buchungsdatum / Tarih', item.date],
                     ['Betrag in EUR (€)', formatEur(item.eur)],
                     ['Betrag in TRY (₺)', formatTry(item.try)],
-                    ['Angewendeter Wechselkurs', `${item.rate.toFixed(4)} TRY/€`],
-                    ['Zahlplan vereinbart', item.plan]
+                    ['Wechselkurs / Döviz Kuru', `${item.rate.toFixed(4).replace('.', ',')} TRY/€`],
+                    ['Zahlplan / Taksit Durumu', item.plan === 'Ja' ? 'Ja (Taksitli)' : 'Nein (Tek Çekim)']
                 ],
                 theme: 'striped',
-                headStyles: { fillColor: [79, 70, 229] },
-                styles: { fontSize: 11, cellPadding: 5 }
+                headStyles: { fillColor: [227, 10, 23], textColor: [255, 255, 255], fontStyle: 'bold' },
+                styles: { fontSize: 10.5, cellPadding: 5.5 }
             });
 
-            // Footer / Notes
+            // Footer Note
             const finalY = doc.lastAutoTable.finalY + 20;
-            doc.setTextColor(100, 100, 100);
-            doc.setFontSize(9);
-            doc.text("Dieser Beleg wurde automatisch aus dem Umsätze Deluxe Dashboard generiert.", 15, finalY);
+            doc.setTextColor(130, 130, 130);
+            doc.setFontSize(8);
+            doc.text("Dieser Beleg wurde automatisch über das Umsätze Deluxe Dashboard generiert.", 14, finalY);
 
             doc.save(`Umsatzbeleg_${item.merchant.replace(/\s+/g, '_')}_${item.id}.pdf`);
             showToast("Beleg als PDF heruntergeladen");
         }
 
-        // PDF Generation - All Filtered Records
+        // PDF Generation - All Filtered Records (Landscape PDF with Exact Flag)
         function exportAllToPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
 
-            doc.setFillColor(30, 27, 75);
-            doc.rect(0, 0, 297, 30, 'F');
+            // Header Banner
+            doc.setFillColor(227, 10, 23); // Official Turkish Red
+            doc.rect(0, 0, 297, 36, 'F');
 
+            // Draw Exact Flag
+            drawExactTurkishFlag(doc, 14, 7, 33);
+
+            // Title
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(18);
             doc.setFont("helvetica", "bold");
-            doc.text("UMSÄTZE DELUXE - GESAMTABRECHNUNG", 15, 20);
+            doc.text("UMSÄTZE DELUXE - GESAMTABRECHNUNG & RAPOR", 56, 20);
 
+            doc.setFontSize(8.5);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Abrechnung vom: ${new Date().toLocaleDateString('de-DE')} | Türkiye Finans Özeti`, 56, 27);
+
+            // Summary KPI Cards inside PDF
             const totalEur = filteredData.reduce((a, b) => a + b.eur, 0);
             const totalTry = filteredData.reduce((a, b) => a + b.try, 0);
+            const avgRate = totalEur > 0 ? (totalTry / totalEur) : 0;
+            const minWageFactor = (totalTry / MINIMUM_WAGE_TRY).toFixed(2);
 
+            // KPI Box 1: Gesamt EUR
+            doc.setFillColor(245, 247, 250);
+            doc.roundedRect(14, 42, 62, 19, 2, 2, 'F');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(7);
+            doc.text("GESAMTUMSATZ (€)", 18, 48);
+            doc.setTextColor(30, 27, 75);
+            doc.setFontSize(11.5);
+            doc.setFont("helvetica", "bold");
+            doc.text(formatEur(totalEur), 18, 56);
+
+            // KPI Box 2: Gesamt TRY
+            doc.setFillColor(245, 247, 250);
+            doc.roundedRect(82, 42, 62, 19, 2, 2, 'F');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(7);
+            doc.setFont("helvetica", "normal");
+            doc.text("GESAMTUMSATZ (TRY ₺)", 86, 48);
+            doc.setTextColor(16, 185, 129);
+            doc.setFontSize(11.5);
+            doc.setFont("helvetica", "bold");
+            doc.text(formatTry(totalTry), 86, 56);
+
+            // KPI Box 3: Ø Wechselkurs
+            doc.setFillColor(245, 247, 250);
+            doc.roundedRect(150, 42, 62, 19, 2, 2, 'F');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(7);
+            doc.setFont("helvetica", "normal");
+            doc.text("EFFEKTIVER Ø KURSE", 154, 48);
+            doc.setTextColor(217, 119, 6);
+            doc.setFontSize(11.5);
+            doc.setFont("helvetica", "bold");
+            doc.text(`${avgRate.toFixed(2).replace('.', ',')} TRY/€`, 154, 56);
+
+            // KPI Box 4: Mindestlohn Faktor
+            doc.setFillColor(245, 247, 250);
+            doc.roundedRect(218, 42, 65, 19, 2, 2, 'F');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(7);
+            doc.setFont("helvetica", "normal");
+            doc.text("FAKTOR MINDESTLOHN (TR)", 222, 48);
+            doc.setTextColor(124, 58, 237);
+            doc.setFontSize(11.5);
+            doc.setFont("helvetica", "bold");
+            doc.text(`${minWageFactor.replace('.', ',')}x (28.075 ₺)`, 222, 56);
+
+            // Data Table Rows
             const tableRows = filteredData.map(item => [
                 `#${item.id}`,
                 item.merchant,
-                formatDate(item.date),
+                item.date,
                 formatEur(item.eur),
                 formatTry(item.try),
-                item.rate.toFixed(4),
+                item.rate.toFixed(2).replace('.', ','),
                 item.plan
             ]);
 
-            // Add Summary Row
+            // Summary Row at end
             tableRows.push([
-                'GESAMT',
+                'TOPLAM / GESAMT',
                 `${filteredData.length} Buchungen`,
                 '-',
                 formatEur(totalEur),
                 formatTry(totalTry),
-                (totalTry / totalEur).toFixed(4),
+                avgRate.toFixed(2).replace('.', ','),
                 '-'
             ]);
 
             doc.autoTable({
-                startY: 38,
-                head: [['ID', 'Händler', 'Datum', 'Betrag (€)', 'Betrag (TRY)', 'Wechselkurs', 'Zahlplan']],
+                startY: 67,
+                head: [['ID', 'Händler / İşyeri', 'Datum', 'Betrag (€)', 'Betrag (TRY ₺)', 'Wechselkurs', 'Zahlplan']],
                 body: tableRows,
                 theme: 'grid',
-                headStyles: { fillColor: [49, 46, 129] },
-                footStyles: { fillColor: [30, 27, 75], fontStyle: 'bold' }
+                headStyles: { fillColor: [227, 10, 23], textColor: [255, 255, 255], fontStyle: 'bold' },
+                footStyles: { fillColor: [30, 27, 75], textColor: [255, 255, 255], fontStyle: 'bold' }
             });
 
-            doc.save(`Umsatze_Deluxe_Gesamtbericht_${new Date().toISOString().split('T')[0]}.pdf`);
-            showToast("Gesamtbericht als PDF gespeichert");
+            doc.save(`Umsatze_Deluxe_Gesamtbericht.pdf`);
+            showToast("Gesamtbericht mit korrekter Flagge als PDF gespeichert!");
         }
 
         // Email Action
@@ -644,7 +821,7 @@
             if (!item) return;
 
             const subject = encodeURIComponent(`Transaktionsbeleg: ${item.merchant} (${formatEur(item.eur)})`);
-            const body = encodeURIComponent(`Hallo,\n\nhier sind die Details zur Transaktion:\n\nHändler: ${item.merchant}\nDatum: ${formatDate(item.date)}\nBetrag (€): ${formatEur(item.eur)}\nBetrag (TRY): ${formatTry(item.try)}\nWechselkurs: ${item.rate.toFixed(4)}\nZahlplan: ${item.plan}\n\nViele Grüße,\nUmsätze Deluxe Dashboard`);
+            const body = encodeURIComponent(`Hallo,\n\nhier sind die Details zur Transaktion:\n\nHändler: ${item.merchant}\nDatum: ${item.date}\nBetrag (€): ${formatEur(item.eur)}\nBetrag (TRY): ${formatTry(item.try)}\nWechselkurs: ${item.rate.toFixed(4)}\nZahlplan: ${item.plan}\n\nViele Grüße,\nUmsätze Deluxe Dashboard`);
 
             window.location.href = `mailto:?subject=${subject}&body=${body}`;
             showToast("E-Mail Programm geöffnet");
@@ -657,12 +834,6 @@
 
         function formatTry(val) {
             return "₺ " + (parseFloat(val) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            const d = new Date(dateStr);
-            return isNaN(d) ? dateStr : d.toLocaleDateString('de-DE');
         }
 
         function getPlanBadge(plan) {
