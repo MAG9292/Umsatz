@@ -166,8 +166,8 @@
                     </div>
                     <div>
                         <select id="sortBy" onchange="applyFilters()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-                            <option value="id-asc">ID (Aufsteigend)</option>
                             <option value="date-desc">Datum (Neueste zuerst)</option>
+                            <option value="id-asc">ID (Aufsteigend)</option>
                             <option value="date-asc">Datum (Älteste zuerst)</option>
                             <option value="amount-desc">Betrag EUR (Höchste zuerst)</option>
                         </select>
@@ -726,7 +726,7 @@
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(18);
             doc.setFont("helvetica", "bold");
-            doc.text("UMSÄTZE DELUXE - GESAMTABRECHNUNG & RAPOR", 56, 20);
+            doc.text("UMSÄTZE - GESAMTABRECHNUNG", 56, 20);
 
             doc.setFontSize(8.5);
             doc.setFont("helvetica", "normal");
